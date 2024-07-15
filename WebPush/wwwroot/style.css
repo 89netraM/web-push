@@ -1,0 +1,7 @@
+#message-list {
+    padding-left: 24ch;
+
+    li::marker {
+        content: attr(data-time) " ";
+    }
+}
