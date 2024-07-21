@@ -1,0 +1,13 @@
+﻿@page "/"
+@using WebPush
+
+@{
+    var keys = VapidHelper.GenerateVapidKeys();
+}
+
+<h1>Hello, world!</h1>
+
+<pre><code>
+Public @keys.PublicKey
+Private @keys.PrivateKey
+</code></pre>

@@ -5,6 +5,8 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebPush", "WebPush\WebPush.csproj", "{F1906B81-4FA4-4C16-B768-7D807FDF0060}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebPushChat", "WebPushChat\WebPushChat.csproj", "{CE40B55B-FD13-4FE4-9661-0C1BBE60B818}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{F1906B81-4FA4-4C16-B768-7D807FDF0060}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F1906B81-4FA4-4C16-B768-7D807FDF0060}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F1906B81-4FA4-4C16-B768-7D807FDF0060}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CE40B55B-FD13-4FE4-9661-0C1BBE60B818}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE40B55B-FD13-4FE4-9661-0C1BBE60B818}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE40B55B-FD13-4FE4-9661-0C1BBE60B818}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE40B55B-FD13-4FE4-9661-0C1BBE60B818}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
