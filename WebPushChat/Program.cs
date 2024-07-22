@@ -20,6 +20,8 @@ builder.Services.AddScoped<VapidKeyService>();
 builder.Services.AddScoped<SubscriptionService>();
 builder.Services.AddScoped<PushService>();
 
+builder.Services.AddSingleton(MessageService.Instance);
+
 await using var host = builder.Build();
 
 await host.RunAsync();

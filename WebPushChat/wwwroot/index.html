@@ -6,7 +6,7 @@
     <title>WebPushChat</title>
     <base href="/" />
     <link href="css/app.css" rel="stylesheet" />
-    
+
     <!-- If you add any scoped CSS files, uncomment the following to load them
     <link href="WebPushChat.styles.css" rel="stylesheet" /> -->
 </head>
@@ -31,16 +31,26 @@
             if (subscription != null) {
                 return subscription;
             }
-            subscription = await registration.pushManager.getSubscription();
-            if (subscription != null) {
+            try {
+                subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: publicKey,
+                });
+                return subscription;
+            } catch (ex) {
+                subscription = await registration.pushManager.getSubscription();
+                await subscription.unsubscribe();
+                subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: publicKey,
+                });
                 return subscription;
             }
-            subscription = await registration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: publicKey,
-            });
-            return subscription;
         };
+
+        navigator.serviceWorker.addEventListener("message", e => {
+            DotNet.invokeMethodAsync("WebPushChat", "SendMessage", JSON.stringify(e.data));
+        });
     </script>
 </body>
 

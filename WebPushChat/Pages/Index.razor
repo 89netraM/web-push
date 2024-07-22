@@ -2,8 +2,10 @@
 @using Lib.Net.Http.WebPush
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.Extensions.Logging
+@using System.Text.Json
 @inject SubscriptionService subscriptionService
 @inject PushService pushService
+@inject MessageService messageService
 @inject ILogger<Index> logger
 
 <h1>Web Push Chat</h1>
@@ -13,11 +15,25 @@
     <button type="submit">Send</button>
 </EditForm>
 
-<ol reversed></ol>
+<ol id="message-list" reversed>
+    @foreach (var message in Messages)
+    {
+        <li data-time="@message.Timestamp.ToString("o")" data-succesful="@message.Successful">
+            <strong>@message.Sender</strong>: @message.Message
+        </li>
+    }
+</ol>
 
 @code {
     [SupplyParameterFromForm]
     private ChatBoxModel Model { get; set; } = new();
+
+    private LinkedList<MessageModel> Messages { get; } = [];
+
+    protected override void OnInitialized()
+    {
+        messageService.MessageReceived += OnMessageReceived;
+    }
 
     private async Task Submit()
     {
@@ -29,12 +45,43 @@
         }
 
         logger.LogInformation("Pushing message");
-        await pushService.SendMessageAsync(subscription, "You", Model.Message);
+        var messageText = Model.Message;
         Model.Message = string.Empty;
+        var message = new MessageModel("You", messageText);
+        Messages.AddFirst(message);
+        try
+        {
+            await pushService.SendMessageAsync(subscription, "You", messageText);
+        }
+        catch (Exception ex)
+        {
+            message.Successful = "false";
+            logger.LogError(ex, "Failed to send message");
+        }
+    }
+
+    private void OnMessageReceived(string jsonObject)
+    {
+        logger.LogInformation("OnMessageReceived {jsonObject}", jsonObject);
+        var message = JsonSerializer.Deserialize<MessageModel>(jsonObject, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+        if (message is not null)
+        {
+            Messages.AddFirst(message);
+            StateHasChanged();
+        }
     }
 
     private class ChatBoxModel
     {
         public string Message { get; set; } = string.Empty;
+    }
+
+    private record MessageModel(string Sender, string Message)
+    {
+        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+        public string Successful { get; set; } = "true";
     }
 }
