@@ -1,4 +1,5 @@
 ﻿@page "/"
+@using Blazored.LocalStorage
 @using Lib.Net.Http.WebPush
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.Extensions.Logging
@@ -8,6 +9,7 @@
 @inject VapidKeyService vapidKeyService
 @inject SubscriptionService subscriptionService
 @inject PeerService peerService
+@inject ISyncLocalStorageService localStorage
 @inject ILogger<Index> logger
 
 <h1>Web Push Chat</h1>
@@ -19,16 +21,34 @@
     }
 </ul>
 
-<hr/>
+<hr />
 
 <h2>My peer code:</h2>
+
+<input type="text" @bind-value="Name" placeholder="Name" required>
+
 <QrCode QrCodeData="@myPeerInfo" />
 
-<hr/>
+<hr />
 
 <h2><a href="/add-peer">Add peer</a></h2>
 
 @code {
+    public string Name
+    {
+        get => localStorage.GetItem<string>(nameof(Name)) ?? string.Empty;
+        set
+        {
+            localStorage.SetItem(nameof(Name), value);
+            UpdatePeerInfo();
+        }
+    }
+    public Guid Id
+    {
+        get => localStorage.GetItem<Guid>(nameof(Id));
+        set => localStorage.SetItem(nameof(Id), value);
+    }
+
     private string myPeerInfo = "";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -40,7 +60,25 @@
 
         await subscriptionService.RegisterSubscription();
 
-        myPeerInfo = JsonSerializer.Serialize(new PeerInfo(vapidKeyService.VapidKeys, subscriptionService.Subscription));
-        StateHasChanged();
+        UpdatePeerInfo();
+    }
+
+    private void UpdatePeerInfo()
+    {
+        if (Id == Guid.Empty)
+        {
+            Id = Guid.NewGuid();
+        }
+
+        if (subscriptionService.Subscription is { } subscription && !string.IsNullOrEmpty(Name))
+        {
+            myPeerInfo = JsonSerializer.Serialize(new PeerInfo(
+                vapidKeyService.VapidKeys,
+                subscription,
+                Name,
+                Id
+            ));
+            StateHasChanged();
+        }
     }
 }

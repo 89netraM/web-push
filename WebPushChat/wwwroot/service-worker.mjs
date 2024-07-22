@@ -1,15 +1,7 @@
-console.log("Service Worker started");
-
-self.addEventListener("install", e => {
-    console.log("Service Worker installed", e);
-});
-
 self.addEventListener("push", e => {
     e.waitUntil((async () => {
-        console.log("Push message received", e.data.text());
-
         const data = e.data.json();
-        if (!(typeof data === "object" && "sender" in data && "message" in data)) {
+        if (!(typeof data === "object" && "senderId" in data && "sender" in data && "message" in data)) {
             console.log("Invalid message from push:", e);
             return;
         }
@@ -17,7 +9,7 @@ self.addEventListener("push", e => {
         let focusedWindow = false;
         const windows = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
         for (const window of windows) {
-            window.postMessage({ sender: data.sender, message: data.message });
+            window.postMessage({ senderId: data.senderId, sender: data.sender, message: data.message });
             focusedWindow |= window.focused;
         }
         if (!focusedWindow) {

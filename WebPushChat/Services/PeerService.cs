@@ -11,10 +11,10 @@ public class PeerService(ISyncLocalStorageService localStorage)
     public Dictionary<string, PeerInfo> Peers =>
         localStorage.GetItem<Dictionary<string, PeerInfo>>(PeersStorageKey) ?? [];
 
-    public void AddPeer(string id, PeerInfo peerInfo)
+    public void AddPeer(PeerInfo peerInfo)
     {
         var peers = Peers;
-        peers[id] = peerInfo;
+        peers[peerInfo.Name] = peerInfo;
         localStorage.SetItem(PeersStorageKey, peers);
     }
 }
