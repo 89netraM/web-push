@@ -20,6 +20,28 @@
         <a class="dismiss">🗙</a>
     </div>
     <script src="_framework/blazor.webassembly.js"></script>
+    <script type="module">
+        let registration = await navigator.serviceWorker.getRegistration("./service-worker.mjs");
+        if (registration == null) {
+            registration = await navigator.serviceWorker.register("./service-worker.mjs", { scope: "./", type: "module" });
+        }
+
+        var subscription;
+        window.registerSubscription = async (publicKey) => {
+            if (subscription != null) {
+                return subscription;
+            }
+            subscription = await registration.pushManager.getSubscription();
+            if (subscription != null) {
+                return subscription;
+            }
+            subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: publicKey,
+            });
+            return subscription;
+        };
+    </script>
 </body>
 
 </html>

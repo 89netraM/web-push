@@ -1,5 +1,18 @@
 ﻿@inherits LayoutComponentBase
+@inject SubscriptionService subscriptionService
 
 <main>
     @Body
 </main>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        await subscriptionService.RegisterSubscription();
+    }
+}

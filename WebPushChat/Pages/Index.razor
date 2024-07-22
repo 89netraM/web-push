@@ -1,13 +1,40 @@
 ﻿@page "/"
-@using WebPush
+@using Lib.Net.Http.WebPush
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.Extensions.Logging
+@inject SubscriptionService subscriptionService
+@inject PushService pushService
+@inject ILogger<Index> logger
 
-@{
-    var keys = VapidHelper.GenerateVapidKeys();
+<h1>Web Push Chat</h1>
+
+<EditForm Model="Model" OnSubmit="Submit">
+    <input type="text" placeholder="Message" autocomplete="off" @bind-value="Model.Message">
+    <button type="submit">Send</button>
+</EditForm>
+
+<ol reversed></ol>
+
+@code {
+    [SupplyParameterFromForm]
+    private ChatBoxModel Model { get; set; } = new();
+
+    private async Task Submit()
+    {
+        logger.LogInformation("Submit");
+        if (subscriptionService.Subscription is not PushSubscription subscription)
+        {
+            logger.LogInformation("No subscription");
+            return;
+        }
+
+        logger.LogInformation("Pushing message");
+        await pushService.SendMessageAsync(subscription, "You", Model.Message);
+        Model.Message = string.Empty;
+    }
+
+    private class ChatBoxModel
+    {
+        public string Message { get; set; } = string.Empty;
+    }
 }
-
-<h1>Hello, world!</h1>
-
-<pre><code>
-Public @keys.PublicKey
-Private @keys.PrivateKey
-</code></pre>

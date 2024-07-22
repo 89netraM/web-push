@@ -1,0 +1,6 @@
+[submodule "Lib.Net.Http.WebPush"]
+	path = Lib.Net.Http.WebPush
+	url = git@github.com:89netraM/Lib.Net.Http.WebPush.git
+[submodule "Lib.Net.Http.EncryptedContentEncoding"]
+	path = Lib.Net.Http.EncryptedContentEncoding
+	url = git@github.com:89netraM/Lib.Net.Http.EncryptedContentEncoding.git

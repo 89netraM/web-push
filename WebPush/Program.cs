@@ -9,6 +9,8 @@ using WebPush;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddHttpLogging(o => { });
+
 builder.Services.AddOptions<PushServiceClientOptions>().BindConfiguration("Vapid").ValidateOnStart();
 
 builder.Services.AddMemoryCache();
@@ -16,6 +18,8 @@ builder.Services.AddMemoryVapidTokenCache();
 builder.Services.AddPushServiceClient();
 
 var app = builder.Build();
+
+app.UseHttpLogging();
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
