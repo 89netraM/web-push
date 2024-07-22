@@ -3,85 +3,44 @@
 @using Microsoft.AspNetCore.Components.Forms
 @using Microsoft.Extensions.Logging
 @using System.Text.Json
+@using WebPushChat.Components
+@using WebPushChat.Models
+@inject VapidKeyService vapidKeyService
 @inject SubscriptionService subscriptionService
-@inject PushService pushService
-@inject MessageService messageService
+@inject PeerService peerService
 @inject ILogger<Index> logger
 
 <h1>Web Push Chat</h1>
 
-<EditForm Model="Model" OnSubmit="Submit">
-    <input type="text" placeholder="Message" autocomplete="off" @bind-value="Model.Message">
-    <button type="submit">Send</button>
-</EditForm>
-
-<ol id="message-list" reversed>
-    @foreach (var message in Messages)
+<ul>
+    @foreach (var (peer, _) in peerService.Peers)
     {
-        <li data-time="@message.Timestamp.ToString("o")" data-succesful="@message.Successful">
-            <strong>@message.Sender</strong>: @message.Message
-        </li>
+        <li><a href="/chat/@peer">@peer</a></li>
     }
-</ol>
+</ul>
+
+<hr/>
+
+<h2>My peer code:</h2>
+<QrCode QrCodeData="@myPeerInfo" />
+
+<hr/>
+
+<h2><a href="/add-peer">Add peer</a></h2>
 
 @code {
-    [SupplyParameterFromForm]
-    private ChatBoxModel Model { get; set; } = new();
+    private string myPeerInfo = "";
 
-    private LinkedList<MessageModel> Messages { get; } = [];
-
-    protected override void OnInitialized()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        messageService.MessageReceived += OnMessageReceived;
-    }
-
-    private async Task Submit()
-    {
-        logger.LogInformation("Submit");
-        if (subscriptionService.Subscription is not PushSubscription subscription)
+        if (!firstRender)
         {
-            logger.LogInformation("No subscription");
             return;
         }
 
-        logger.LogInformation("Pushing message");
-        var messageText = Model.Message;
-        Model.Message = string.Empty;
-        var message = new MessageModel("You", messageText);
-        Messages.AddFirst(message);
-        try
-        {
-            await pushService.SendMessageAsync(subscription, "You", messageText);
-        }
-        catch (Exception ex)
-        {
-            message.Successful = "false";
-            logger.LogError(ex, "Failed to send message");
-        }
-    }
+        await subscriptionService.RegisterSubscription();
 
-    private void OnMessageReceived(string jsonObject)
-    {
-        logger.LogInformation("OnMessageReceived {jsonObject}", jsonObject);
-        var message = JsonSerializer.Deserialize<MessageModel>(jsonObject, new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true
-            });
-        if (message is not null)
-        {
-            Messages.AddFirst(message);
-            StateHasChanged();
-        }
-    }
-
-    private class ChatBoxModel
-    {
-        public string Message { get; set; } = string.Empty;
-    }
-
-    private record MessageModel(string Sender, string Message)
-    {
-        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
-        public string Successful { get; set; } = "true";
+        myPeerInfo = JsonSerializer.Serialize(new PeerInfo(vapidKeyService.VapidKeys, subscriptionService.Subscription));
+        StateHasChanged();
     }
 }

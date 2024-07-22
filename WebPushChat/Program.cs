@@ -19,6 +19,7 @@ builder.Services.AddScoped(sp => new PushServiceClient(new HttpClient()));
 builder.Services.AddScoped<VapidKeyService>();
 builder.Services.AddScoped<SubscriptionService>();
 builder.Services.AddScoped<PushService>();
+builder.Services.AddScoped<PeerService>();
 
 builder.Services.AddSingleton(MessageService.Instance);
 

@@ -1,0 +1,35 @@
+@namespace WebPushChat.Components
+@using ZXing;
+@using ZXing.QrCode;
+@using ZXing.Rendering;
+@using static ZXing.Rendering.SvgRenderer;
+
+<div class="qr-code">@qrCodeSvg</div>
+
+@code {
+    private string qrCodeData = string.Empty;
+    [Parameter]
+    public string QrCodeData
+    {
+        get => qrCodeData;
+        set
+        {
+            qrCodeData = value;
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                qrCodeSvg = new();
+                return;
+            }
+
+            var barcodeWriter = new BarcodeWriterSvg
+            {
+                Format = BarcodeFormat.QR_CODE,
+                Options = new() { PureBarcode = true, },
+                Renderer = new SvgRenderer { Background = Color.White, Foreground = Color.Black },
+            };
+            qrCodeSvg = new(barcodeWriter.Write(value).Content);
+        }
+    }
+
+    private MarkupString qrCodeSvg = new();
+}

@@ -1,0 +1,50 @@
+@page "/add-peer"
+@using System.Text.Json
+@using ZXingBlazor.Components
+@using Microsoft.AspNetCore.Components.Forms
+@using WebPushChat.Services
+@using WebPushChat.Models
+@inject PeerService peerService
+@inject NavigationManager navigationManager
+
+<h1>Add peer</h1>
+
+<EditForm Model="model" OnSubmit="Submit">
+    @if (model.PeerInfo is null)
+    {
+        <BarcodeReader Style="ZXingBlazorStyle.Embedded" Decodeonce="false" ScanResult="OnScanResult" />
+    }
+
+    <input type="text" placeholder="Name" @bind="model.Name" />
+
+    <button type="submit" disabled="@IsInvalid">Add</button>
+</EditForm>
+
+@code {
+    [SupplyParameterFromForm]
+    private AddPeerModel model { get; set; } = new();
+
+    public bool IsInvalid => model.PeerInfo is null || string.IsNullOrWhiteSpace(model.Name);
+
+    private void OnScanResult(string result)
+    {
+        model.PeerInfo = JsonSerializer.Deserialize<PeerInfo>(result);
+    }
+
+    private void Submit()
+    {
+        if (model.PeerInfo is null)
+        {
+            return;
+        }
+
+        peerService.AddPeer(model.Name, model.PeerInfo);
+        navigationManager.NavigateTo("/");
+    }
+
+    private class AddPeerModel
+    {
+        public PeerInfo? PeerInfo { get; set; }
+        public string Name { get; set; } = string.Empty;
+    }
+}

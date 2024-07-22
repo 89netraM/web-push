@@ -1,0 +1,104 @@
+﻿@page "/chat/{peer}"
+@using Lib.Net.Http.WebPush
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.Extensions.Logging
+@using System.Text.Json
+@using WebPushChat.Components
+@using WebPushChat.Models
+@inject VapidKeyService vapidKeyService
+@inject SubscriptionService subscriptionService
+@inject PeerService peerService
+@inject PushService pushService
+@inject MessageService messageService
+@inject ILogger<Chat> logger
+
+<h1>Web Push Chat</h1>
+
+@if (peerInfo is null)
+{
+    <p>Peer not found</p>
+    return;
+}
+
+<EditForm Model="Model" OnSubmit="Submit">
+    <input type="text" placeholder="Message" autocomplete="off" @bind-value="Model.Message">
+    <button type="submit">Send</button>
+</EditForm>
+
+<ol id="message-list" reversed>
+    @foreach (var message in Messages)
+    {
+        <li data-time="@message.Timestamp.ToString("o")" data-succesful="@message.Successful">
+            <strong>@message.Sender</strong>: @message.Message
+        </li>
+    }
+</ol>
+
+@code {
+    [Parameter]
+    public required string peer { init; get; }
+
+    [SupplyParameterFromForm]
+    private ChatBoxModel Model { get; set; } = new();
+
+    private LinkedList<MessageModel> Messages { get; } = [];
+
+    private PeerInfo? peerInfo;
+
+    protected override void OnInitialized()
+    {
+        messageService.MessageReceived += OnMessageReceived;
+
+        peerInfo = peerService.Peers[peer];
+    }
+
+    private async Task Submit()
+    {
+        logger.LogInformation("Submit");
+        if (peerInfo is null)
+        {
+            logger.LogInformation("No peer info");
+            return;
+        }
+
+        logger.LogInformation("Pushing message");
+        var messageText = Model.Message;
+        Model.Message = string.Empty;
+        var message = new MessageModel("You", messageText);
+        Messages.AddFirst(message);
+        try
+        {
+            await pushService.SendMessageAsync(peerInfo, "Peer", messageText);
+        }
+        catch (Exception ex)
+        {
+            message.Successful = "false";
+            logger.LogError(ex, "Failed to send message");
+        }
+    }
+
+    private void OnMessageReceived(string jsonObject)
+    {
+        logger.LogInformation("OnMessageReceived {jsonObject}", jsonObject);
+        var message = JsonSerializer.Deserialize<MessageModel>(jsonObject, new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true
+            });
+        if (message is not null)
+        {
+            Messages.AddFirst(message);
+            StateHasChanged();
+        }
+    }
+
+    private class ChatBoxModel
+    {
+        public string Message { get; set; } = string.Empty;
+    }
+
+    private record MessageModel(string Sender, string Message)
+    {
+        public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+        public string Successful { get; set; } = "true";
+    }
+}

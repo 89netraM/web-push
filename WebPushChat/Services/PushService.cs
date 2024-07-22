@@ -1,21 +1,20 @@
 using System.Threading.Tasks;
 using Lib.Net.Http.WebPush;
 using Microsoft.Extensions.Logging;
+using WebPushChat.Models;
 
 namespace WebPushChat.Services;
 
 public class PushService(
     ILogger<PushService> logger,
-    VapidKeyService vapidKeyService,
     PushServiceClient pushServiceClient
 )
 {
-    public async Task SendMessageAsync(PushSubscription subscription, string sender, string message)
+    public async Task SendMessageAsync(PeerInfo peerInfo, string sender, string message)
     {
-        var vapidKeys = vapidKeyService.VapidKeys;
-        logger.LogInformation("Sending message to {Endpoint} from {Sender}", subscription.Endpoint, sender);
+        logger.LogInformation("Sending message to {Endpoint} from {Sender}", peerInfo.PushSubscription.Endpoint, sender);
         await pushServiceClient.RequestPushMessageDeliveryAsync(
-            subscription,
+            peerInfo.PushSubscription,
             new(
                 $$"""
                 {
@@ -27,7 +26,7 @@ public class PushService(
             {
                 Urgency = PushMessageUrgency.High,
             },
-            vapidKeys
+            peerInfo.Vapid
         );
     }
 }
