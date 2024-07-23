@@ -31,6 +31,12 @@
             if (subscription != null) {
                 return subscription;
             }
+
+            const notificationPermission = await Notification.requestPermission();
+            if (notificationPermission !== "granted") {
+                return null;
+            }
+
             try {
                 subscription = await registration.pushManager.subscribe({
                     userVisibleOnly: true,

@@ -14,6 +14,19 @@
 
 <h1>Web Push Chat</h1>
 
+@if (NotificationsDenied)
+{
+    <p>Notifications are denied. Please allow them in your browser settings.</p>
+    return;
+}
+
+@if (subscriptionService.Subscription is null)
+{
+    <button @onclick="RegisterSubscription">Activate notifications</button>
+
+    return;
+}
+
 <ul>
     @foreach (var (peer, _) in peerService.Peers)
     {
@@ -26,6 +39,7 @@
 <h2>My peer code:</h2>
 
 <input type="text" @bind-value="Name" placeholder="Name" required>
+<button>Set Name</button>
 
 <QrCode QrCodeData="@myPeerInfo" />
 
@@ -49,16 +63,25 @@
         set => localStorage.SetItem(nameof(Id), value);
     }
 
+    public bool NotificationsDenied { get; set; } = false;
+
     private string myPeerInfo = "";
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override void OnInitialized()
     {
-        if (!firstRender)
+        UpdatePeerInfo();
+    }
+
+    private async Task RegisterSubscription()
+    {
+        var subscription = await subscriptionService.RegisterSubscription();
+
+        if (subscription is null)
         {
+            NotificationsDenied = true;
+            StateHasChanged();
             return;
         }
-
-        await subscriptionService.RegisterSubscription();
 
         UpdatePeerInfo();
     }

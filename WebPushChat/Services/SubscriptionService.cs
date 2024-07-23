@@ -21,12 +21,13 @@ public class SubscriptionService(
         set => localStorage.SetItem(SubscriptionStorageKey, value);
     }
 
-    public async Task RegisterSubscription()
+    public async Task<PushSubscription?> RegisterSubscription()
     {
         var publicKey = vapidKeyService.VapidKeys.PublicKey;
         logger.LogInformation("Registering subscription");
         var subscription = await jsRuntime.InvokeAsync<PushSubscription>("registerSubscription", publicKey);
         logger.LogInformation("Subscription registered");
         Subscription = subscription;
+        return subscription;
     }
 }
