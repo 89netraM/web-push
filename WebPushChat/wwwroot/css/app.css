@@ -1,3 +1,7 @@
+body {
+    margin: 0;
+}
+
 #blazor-error-ui {
     background: lightyellow;
     bottom: 0;
@@ -27,6 +31,10 @@
     }
 }
 
+h1 {
+    outline: none;
+}
+
 #message-list {
     padding-left: 28ch;
 
@@ -39,4 +47,15 @@
             content: attr(data-time) " ";
         }
     }
+}
+
+.qr-code {
+    max-width: 100vmin;
+}
+
+.barcode-reader-div .video {
+    width: 100vw;
+    height: 100vh;
+    object-fit: cover;
+    object-position: center;
 }

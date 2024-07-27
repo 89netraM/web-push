@@ -21,7 +21,7 @@ builder.Services.AddScoped<SubscriptionService>();
 builder.Services.AddScoped<PushService>();
 builder.Services.AddScoped<PeerService>();
 
-builder.Services.AddSingleton(MessageService.Instance);
+builder.Services.AddSingleton(sp => new MessageService(sp));
 
 await using var host = builder.Build();
 

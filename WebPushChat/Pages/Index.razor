@@ -6,6 +6,8 @@
 @using System.Text.Json
 @using WebPushChat.Components
 @using WebPushChat.Models
+@implements IDisposable
+@inject MessageService messageService
 @inject VapidKeyService vapidKeyService
 @inject SubscriptionService subscriptionService
 @inject PeerService peerService
@@ -69,6 +71,8 @@
 
     protected override void OnInitialized()
     {
+        messageService.MessageReceived += OnMessageReceived;
+
         UpdatePeerInfo();
     }
 
@@ -103,5 +107,25 @@
             ));
             StateHasChanged();
         }
+    }
+
+    private void OnMessageReceived(string message)
+    {
+        try
+        {
+            var messageModel = JsonSerializer.Deserialize<MessageModel>(message);
+
+            if (messageModel?.SenderId == PeerService.PeerMessageGuid)
+            {
+                StateHasChanged();
+            }
+        }
+        catch
+        { }
+    }
+
+    public void Dispose()
+    {
+        messageService.MessageReceived -= OnMessageReceived;
     }
 }

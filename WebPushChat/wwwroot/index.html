@@ -57,6 +57,33 @@
         navigator.serviceWorker.addEventListener("message", e => {
             DotNet.invokeMethodAsync("WebPushChat", "SendMessage", JSON.stringify(e.data));
         });
+
+        async function readImageDataFromClipboard() {
+            const clipboardItems = await navigator.clipboard.read();
+            console.log("clipboardItems", clipboardItems);
+            if (clipboardItems.length === 0) {
+                return null;
+            }
+            const clipboardItem = clipboardItems[0];
+            console.log("clipboardItem", clipboardItem);
+            const imageType = clipboardItem.types.find(type => type.startsWith("image/"));
+            console.log("imageType", imageType);
+            if (imageType == null) {
+                return null;
+            }
+
+            const blob = await clipboardItem.getType(imageType);
+            const url = URL.createObjectURL(blob);
+            console.log("url", url);
+            try {
+                const qrCodeReader = new ZXing.BrowserQRCodeReader();
+                const result = await qrCodeReader.decodeFromImageUrl(url);
+                return result.getText();
+            } finally {
+                URL.revokeObjectURL(url);
+            }
+        }
+        window.readImageDataFromClipboard = readImageDataFromClipboard;
     </script>
 </body>
 

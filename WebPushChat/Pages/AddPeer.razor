@@ -4,20 +4,34 @@
 @using Microsoft.AspNetCore.Components.Forms
 @using WebPushChat.Services
 @using WebPushChat.Models
+@inject IJSRuntime jsRuntime
 @inject PeerService peerService
 @inject NavigationManager navigationManager
 
 <h1>Add peer</h1>
 
+<button @onclick="ReadFromClipboard">Read image from clipboard</button>
+
 <BarcodeReader Style="ZXingBlazorStyle.Embedded" Decodeonce="false" ScanResult="OnScanResult" />
 
 @code {
-    private void OnScanResult(string result)
+    private async void OnScanResult(string result)
     {
         var peerInfo = JsonSerializer.Deserialize<PeerInfo>(result);
         if (peerInfo is not null)
         {
-            peerService.AddPeer(peerInfo);
+            await peerService.AddPeer(peerInfo);
+            navigationManager.NavigateTo("/");
+        }
+    }
+
+    private async void ReadFromClipboard()
+    {
+        var result = await jsRuntime.InvokeAsync<string>("readImageDataFromClipboard");
+        var peerInfo = JsonSerializer.Deserialize<PeerInfo>(result);
+        if (peerInfo is not null)
+        {
+            await peerService.AddPeer(peerInfo);
             navigationManager.NavigateTo("/");
         }
     }

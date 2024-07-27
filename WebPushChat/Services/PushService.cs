@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json;
 using System.Threading.Tasks;
 using Lib.Net.Http.WebPush;
 using Microsoft.Extensions.Logging;
@@ -6,28 +7,14 @@ using WebPushChat.Models;
 
 namespace WebPushChat.Services;
 
-public class PushService(
-    ILogger<PushService> logger,
-    PushServiceClient pushServiceClient
-)
+public class PushService(ILogger<PushService> logger, PushServiceClient pushServiceClient)
 {
-    public async Task SendMessageAsync(PeerInfo peerInfo, Guid senderId, string sender, string message)
+    public async Task SendMessageAsync<T>(PeerInfo peerInfo, T message)
     {
-        logger.LogInformation("Sending message to {Endpoint} from {Sender}", peerInfo.PushSubscription.Endpoint, sender);
+        logger.LogInformation("Sending message to {Endpoint}", peerInfo.PushSubscription.Endpoint);
         await pushServiceClient.RequestPushMessageDeliveryAsync(
             peerInfo.PushSubscription,
-            new(
-                $$"""
-                {
-                    "senderId": "{{senderId}}",
-                    "sender": "{{sender}}",
-                    "message": "{{message}}"
-                }
-                """
-            )
-            {
-                Urgency = PushMessageUrgency.High,
-            },
+            new(JsonSerializer.Serialize(message)) { Urgency = PushMessageUrgency.High, },
             peerInfo.Vapid
         );
     }

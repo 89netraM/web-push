@@ -43,7 +43,7 @@
     [SupplyParameterFromForm]
     private ChatBoxModel Model { get; set; } = new();
 
-    private LinkedList<MessageModel> Messages { get; } = [];
+    private LinkedList<MessageViewModel> Messages { get; } = [];
 
     private PeerInfo? peerInfo;
 
@@ -66,11 +66,11 @@
         logger.LogInformation("Pushing message");
         var messageText = Model.Message;
         Model.Message = string.Empty;
-        var message = new MessageModel(localStorage.GetItem<Guid>("Id"), localStorage.GetItem<string>("Name")!, messageText);
+        var message = new MessageViewModel(localStorage.GetItem<Guid>("Id"), localStorage.GetItem<string>("Name")!, messageText);
         Messages.AddFirst(message);
         try
         {
-            await pushService.SendMessageAsync(peerInfo, localStorage.GetItem<Guid>("Id"), localStorage.GetItem<string>("Name")!, messageText);
+            await pushService.SendMessageAsync<MessageModel>(peerInfo, message);
         }
         catch (Exception ex)
         {
@@ -82,7 +82,7 @@
     private void OnMessageReceived(string jsonObject)
     {
         logger.LogInformation("OnMessageReceived {jsonObject}", jsonObject);
-        var message = JsonSerializer.Deserialize<MessageModel>(jsonObject, new JsonSerializerOptions
+        var message = JsonSerializer.Deserialize<MessageViewModel>(jsonObject, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
             });
@@ -98,7 +98,7 @@
         public string Message { get; set; } = string.Empty;
     }
 
-    private record MessageModel(Guid SenderId, string Sender, string Message)
+    private record MessageViewModel(Guid SenderId, string Sender, string Message) : MessageModel(SenderId, Sender, Message)
     {
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
         public string Successful { get; set; } = "true";
